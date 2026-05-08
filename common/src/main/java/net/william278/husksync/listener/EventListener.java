@@ -124,12 +124,11 @@ public abstract class EventListener {
 
         // Wait for in-flight async saves queued by PlayerQuitEvent during shutdown.
         // Paper kicks players (firing PlayerQuitEvent) before calling onDisable(), so those
-        // saves run asynchronously and must complete before we close DB/Redis connections.
+        // saves run asynchronously and must complete before we close DB connections.
         plugin.getDataSyncer().awaitPendingSaves();
 
-        // Close outstanding connections
+        // Close the database connection
         plugin.getDatabase().terminate();
-        plugin.getRedisManager().terminate();
     }
 
     /**

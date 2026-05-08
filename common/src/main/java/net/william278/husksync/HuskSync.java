@@ -144,6 +144,53 @@ public interface HuskSync extends Task.Supplier, EventDispatcher, ConfigProvider
     }
 
     /**
+     * Logs the HUSKSYNC ASCII banner (blank line, art, blank line) during startup.
+     */
+    default void logStartupBanner() {
+        log(Level.INFO, "");
+        final String banner = """
+                ██╗  ██╗██╗   ██╗███████╗██╗  ██╗███████╗██╗   ██╗███╗   ██╗ ██████╗
+                ██║  ██║██║   ██║██╔════╝██║ ██╔╝██╔════╝╚██╗ ██╔╝████╗  ██║██╔════╝
+                ███████║██║   ██║███████╗█████╔╝ ███████╗ ╚████╔╝ ██╔██╗ ██║██║
+                ██╔══██║██║   ██║╚════██║██╔═██╗ ╚════██║  ╚██╔╝  ██║╚██╗██║██║
+                ██║  ██║╚██████╔╝███████║██║  ██╗███████║   ██║   ██║ ╚████║╚██████╗
+                ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═══╝ ╚═════╝""";
+        banner.stripIndent().lines().forEach(line -> log(Level.INFO, line));
+        log(Level.INFO, "");
+    }
+
+    /**
+     * Logs a boxed unofficial-fork disclaimer after the banner.
+     */
+    default void logUnofficialForkNotice() {
+        final String notice = """
+                ██╗
+                ██║ Warning
+                ██║ This is an unofficial fork of HuskSync by William278. It is not affiliated with or endorsed by the original author.
+                ╚═╝ Use at your own risk. Always back up your player data before installing or upgrading.
+                ██╗
+                ╚═╝""";
+        notice.stripIndent().lines().forEach(line -> log(Level.INFO, line));
+        log(Level.INFO, "");
+    }
+
+    /**
+     * Logs the same loading line Paper prints under the banner (Paper also logs once earlier; cannot be suppressed).
+     */
+    default void logPluginLoadingLine() {
+        log(Level.INFO, "Loading server plugin HuskSync v" + getPluginVersion());
+    }
+
+    /**
+     * Banner, unofficial-fork notice, then loading line — intended order before {@link #initialize}.
+     */
+    default void logStartupHeader() {
+        logStartupBanner();
+        logUnofficialForkNotice();
+        logPluginLoadingLine();
+    }
+
+    /**
      * Initialize a faucet of the plugin.
      *
      * @param name   the name of the faucet
