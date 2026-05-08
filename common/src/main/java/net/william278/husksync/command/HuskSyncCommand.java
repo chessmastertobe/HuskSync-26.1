@@ -60,7 +60,7 @@ public class HuskSyncCommand extends PluginCommand {
         this.updateChecker = plugin.getUpdateChecker();
         this.aboutMenu = AboutMenu.builder()
                 .title(Component.text("HuskSync"))
-                .description(Component.text("A modern, cross-server player data synchronization system"))
+                .description(Component.text("A modern, cross-server player data synchronization system (Unofficial Fork — Paper 26.1.2 support)"))
                 .version(plugin.getPluginVersion())
                 .credits("Author",
                         AboutMenu.Credit.of("William278").description("Click to visit website").url("https://william278.net"))
@@ -70,7 +70,8 @@ public class HuskSyncCommand extends PluginCommand {
                         AboutMenu.Credit.of("Preva1l").description("Code"),
                         AboutMenu.Credit.of("hanbings").description("Code (Fabric porting)"),
                         AboutMenu.Credit.of("Stampede2011").description("Code (Fabric mixins)"),
-                        AboutMenu.Credit.of("VinerDream").description("Code"))
+                        AboutMenu.Credit.of("VinerDream").description("Code"),
+                        AboutMenu.Credit.of("MrPippi").description("Fork maintainer (Paper 26.1.2 support)").url("https://github.com/MrPippi/HuskSync-26.1"))
                 .credits("Translators",
                         AboutMenu.Credit.of("Namiu").description("Japanese (ja-jp)"),
                         AboutMenu.Credit.of("anchelthe").description("Spanish (es-es)"),
@@ -89,7 +90,7 @@ public class HuskSyncCommand extends PluginCommand {
                         AboutMenu.Credit.of("IbanEtchep").description("French (fr-fr)"))
                 .buttons(
                         AboutMenu.Link.of("https://william278.net/docs/husksync").text("Documentation").icon("⛏"),
-                        AboutMenu.Link.of("https://github.com/WiIIiam278/HuskSync/issues").text("Issues").icon("❌").color(TextColor.color(0xff9f0f)),
+                        AboutMenu.Link.of("https://github.com/MrPippi/HuskSync-26.1/issues").text("Issues").icon("❌").color(TextColor.color(0xff9f0f)),
                         AboutMenu.Link.of("https://discord.gg/tVYhJfyDWG").text("Discord").icon("⭐").color(TextColor.color(0x6773f5)))
                 .build();
     }
