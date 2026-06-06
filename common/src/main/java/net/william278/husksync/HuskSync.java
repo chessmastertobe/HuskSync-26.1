@@ -46,7 +46,8 @@ import net.william278.uniform.Uniform;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -57,6 +58,7 @@ public interface HuskSync extends Task.Supplier, EventDispatcher, ConfigProvider
         CompatibilityChecker, DumpProvider, DataVersionSupplier {
 
     int SPIGOT_RESOURCE_ID = 97144;
+    DateTimeFormatter DEBUG_TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
     /**
      * Returns a set of online players.
@@ -135,12 +137,7 @@ public interface HuskSync extends Task.Supplier, EventDispatcher, ConfigProvider
 
     @NotNull
     default Map<Identifier, Data> getPlayerCustomDataStore(@NotNull OnlineUser user) {
-        if (getPlayerCustomDataStore().containsKey(user.getUuid())) {
-            return getPlayerCustomDataStore().get(user.getUuid());
-        }
-        final Map<Identifier, Data> data = Maps.newHashMap();
-        getPlayerCustomDataStore().put(user.getUuid(), data);
-        return data;
+        return getPlayerCustomDataStore().computeIfAbsent(user.getUuid(), k -> Maps.newHashMap());
     }
 
     /**
@@ -246,7 +243,7 @@ public interface HuskSync extends Task.Supplier, EventDispatcher, ConfigProvider
     // Get the debug log message format
     @NotNull
     private String getDebugString(@NotNull String message) {
-        return String.format("[DEBUG] [%s] %s", new SimpleDateFormat("mm:ss.SSS").format(new Date()), message);
+        return String.format("[DEBUG] [%s] %s", DEBUG_TIME_FORMAT.format(LocalTime.now()), message);
     }
 
     /**

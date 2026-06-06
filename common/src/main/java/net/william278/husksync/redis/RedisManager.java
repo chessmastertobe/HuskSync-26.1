@@ -193,7 +193,7 @@ public class RedisManager extends JedisPubSub {
             case REQUEST_USER_DATA -> redisMessage.getTargetUser(plugin).ifPresent(
                     user -> RedisMessage.create(
                             UUID.fromString(new String(redisMessage.getPayload(), StandardCharsets.UTF_8)),
-                            user.createSnapshot(DataSnapshot.SaveCause.INVENTORY_COMMAND).asBytes(plugin))
+                            user.createSnapshot(DataSnapshot.SaveCause.API).asBytes(plugin))
                             .dispatch(plugin, RedisMessage.Type.RETURN_USER_DATA));
             case CHECK_IN_PETITION -> {
                 if (!redisMessage.isTargetServer(plugin)
@@ -201,7 +201,8 @@ public class RedisManager extends JedisPubSub {
                     return;
                 }
                 final String payload = new String(redisMessage.getPayload(), StandardCharsets.UTF_8);
-                final User user = new User(UUID.fromString(payload.split("/")[0]), payload.split("/")[1]);
+                final String[] parts = payload.split("/");
+                final User user = new User(UUID.fromString(parts[0]), parts[1]);
 
                 // Only release checkout if user is truly offline AND not being processed
                 final boolean isOnline = plugin.getOnlineUser(user.getUuid()).isPresent();
@@ -272,11 +273,13 @@ public class RedisManager extends JedisPubSub {
                 .orElse(this.getNetworkedUserData(requestId, user));
     }
 
-    // Request a user's dat x-server
+    // Request a user's data x-server
     private CompletableFuture<Optional<DataSnapshot.Packed>> getNetworkedUserData(@NotNull UUID requestId,
             @NotNull User user) {
         final CompletableFuture<Optional<DataSnapshot.Packed>> future = new CompletableFuture<>();
         pendingRequests.put(requestId, future);
+        // Clean up the pending entry on any terminal outcome (normal, timeout, or other exception)
+        future.whenComplete((v, t) -> pendingRequests.remove(requestId));
         plugin.runAsync(() -> {
             final RedisMessage redisMessage = RedisMessage.create(
                     user.getUuid(),
@@ -287,10 +290,7 @@ public class RedisManager extends JedisPubSub {
                 .orTimeout(
                         plugin.getSettings().getSynchronization().getNetworkLatencyMilliseconds(),
                         TimeUnit.MILLISECONDS)
-                .exceptionally(throwable -> {
-                    pendingRequests.remove(requestId);
-                    return Optional.empty();
-                });
+                .exceptionally(throwable -> Optional.empty());
     }
 
     // Set a user's data to Redis
@@ -361,18 +361,20 @@ public class RedisManager extends JedisPubSub {
 
     @Blocking
     public void clearUsersCheckedOutOnServer() {
-        final String keyFormat = String.format("%s*", RedisKeyType.DATA_CHECKOUT.getKeyPrefix(clusterId));
+        final String keyPattern = String.format("%s*", RedisKeyType.DATA_CHECKOUT.getKeyPrefix(clusterId));
         try (Jedis jedis = jedisPool.getResource()) {
-            final Set<String> keys = jedis.keys(keyFormat);
-            if (keys == null) {
-                plugin.log(Level.WARNING, "Checkout key returned null from Redis during clearing");
-                return;
-            }
-            for (String key : keys) {
-                if (jedis.get(key).equals(plugin.getServerName())) {
-                    jedis.del(key);
+            final ScanParams params = new ScanParams().match(keyPattern).count(100);
+            String cursor = ScanParams.SCAN_POINTER_START;
+            do {
+                final ScanResult<String> result = jedis.scan(cursor, params);
+                cursor = result.getCursor();
+                for (String key : result.getResult()) {
+                    final String value = jedis.get(key);
+                    if (value != null && value.equals(plugin.getServerName())) {
+                        jedis.del(key);
+                    }
                 }
-            }
+            } while (!cursor.equals(ScanParams.SCAN_POINTER_START));
         } catch (Throwable e) {
             plugin.log(Level.SEVERE, "An exception occurred clearing this server's checkout keys on Redis", e);
         }
@@ -468,11 +470,14 @@ public class RedisManager extends JedisPubSub {
 
     @Blocking
     public String getVersion() {
-        final String info = getStatusDump();
-        for (String line : info.split("\n")) {
-            if (line.startsWith("redis_version:")) {
-                return line.split(":")[1];
+        try (Jedis jedis = jedisPool.getResource()) {
+            for (String line : jedis.info("server").split("\n")) {
+                if (line.startsWith("redis_version:")) {
+                    return line.split(":")[1].trim();
+                }
             }
+        } catch (Throwable e) {
+            plugin.log(Level.SEVERE, "An exception occurred getting Redis version", e);
         }
         return "unknown";
     }

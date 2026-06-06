@@ -103,6 +103,16 @@ public abstract class DataSyncer {
     public abstract void syncSaveUserData(@NotNull OnlineUser user);
 
     /**
+     * Called when a user disconnects while their join-sync is still in-flight (player was locked at quit time).
+     * Subclasses should override to release sync-specific resources (e.g., DATA_CHECKOUT in lockstep mode).
+     *
+     * @param user the user whose sync should be aborted
+     */
+    public void syncAbortUserData(@NotNull OnlineUser user) {
+        plugin.unlockPlayer(user.getUuid());
+    }
+
+    /**
      * Save a user's current data
      *
      * @param onlineUser the user to save data of

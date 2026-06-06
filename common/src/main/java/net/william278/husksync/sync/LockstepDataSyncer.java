@@ -82,4 +82,18 @@ public class LockstepDataSyncer extends DataSyncer {
         ));
     }
 
+    @Override
+    public void syncAbortUserData(@NotNull OnlineUser user) {
+        // Release DATA_CHECKOUT only if this server currently holds it, then unlock.
+        // Called when the player disconnects while their join-sync is still in-flight.
+        plugin.runAsync(() -> {
+            getRedis().getUserCheckedOut(user).ifPresent(server -> {
+                if (server.equals(plugin.getServerName())) {
+                    getRedis().setUserCheckedOut(user, false);
+                }
+            });
+            plugin.unlockPlayer(user.getUuid());
+        });
+    }
+
 }

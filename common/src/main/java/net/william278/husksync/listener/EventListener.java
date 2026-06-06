@@ -67,10 +67,14 @@ public abstract class EventListener {
         }
         plugin.getDisconnectingPlayers().add(user.getUuid());
 
-        // Lock, then save their data if the user is unlocked
         if (!plugin.isLocked(user.getUuid())) {
+            // Normal path: lock then save
             plugin.lockPlayer(user.getUuid());
             plugin.getDataSyncer().syncSaveUserData(user);
+        } else {
+            // Join-sync is still in-flight; abort it to release DATA_CHECKOUT and unlock,
+            // preventing the player from being permanently stuck on their next server.
+            plugin.getDataSyncer().syncAbortUserData(user);
         }
     }
 
