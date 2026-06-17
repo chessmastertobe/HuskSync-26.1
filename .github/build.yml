@@ -18,11 +18,11 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Make Gradle executable
+      - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+      - name: Build with Gradle (using Java 21)
+        run: ./gradlew build --no-daemon -Porg.gradle.java.home=$JAVA_HOME
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
