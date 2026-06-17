@@ -2,8 +2,6 @@ name: Build HuskSync
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ master ]
 
 jobs:
   build:
@@ -18,6 +16,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
 
       - name: Build with Gradle
         run: ./gradlew build --no-daemon
