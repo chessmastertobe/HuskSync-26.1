@@ -21,8 +21,10 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build with Gradle (using Java 21)
-        run: ./gradlew build --no-daemon -Porg.gradle.java.home=$JAVA_HOME
+      - name: Build with Gradle (Force Java 21)
+        env:
+          JAVA_HOME: ${{ steps.setup-java.outputs.java-path }}
+        run: ./gradlew build --no-daemon --console=plain -Porg.gradle.java.home=${{ steps.setup-java.outputs.java-path }}
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
