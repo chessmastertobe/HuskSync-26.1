@@ -24,7 +24,8 @@ jobs:
       - name: Build with Gradle (Force Java 21)
         env:
           JAVA_HOME: ${{ steps.setup-java.outputs.java-path }}
-        run: ./gradlew build --no-daemon --console=plain -Porg.gradle.java.home=${{ steps.setup-java.outputs.java-path }}
+          GRADLE_OPTS: "-Dorg.gradle.java.home=${{ steps.setup-java.outputs.java-path }}"
+        run: ./gradlew build --no-daemon --console=plain
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
